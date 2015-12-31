@@ -19,41 +19,57 @@ package com.example.android.testing.notes.data;
 import android.os.Handler;
 import android.support.v4.util.ArrayMap;
 
+import com.parse.FindCallback;
+import com.parse.GetCallback;
+import com.parse.ParseException;
+import com.parse.ParseQuery;
+
 import java.util.ArrayList;
 import java.util.List;
+
+import timber.log.Timber;
 
 /**
  * Implementation of the Notes Service API that adds a latency simulating network.
  */
 public class NotesServiceApiImpl implements NotesServiceApi {
 
-    private static final int SERVICE_LATENCY_IN_MILLIS = 2000;
-    private static final ArrayMap<String, Note> NOTES_SERVICE_DATA =
-            NotesServiceApiEndpoint.loadPersistedNotes();
-
     @Override
     public void getAllNotes(final NotesServiceCallback callback) {
-        // Simulate network by delaying the execution.
-        Handler handler = new Handler();
-        handler.postDelayed(new Runnable() {
+
+        ParseQuery<Note> query = ParseQuery.getQuery(Note.class);
+        query.findInBackground(new FindCallback<Note>() {
             @Override
-            public void run() {
-                List<Note> notes = new ArrayList<>(NOTES_SERVICE_DATA.values());
-                callback.onLoaded(notes);
+            public void done(List<Note> notes, ParseException e) {
+                if(e == null) {
+                    callback.onLoaded(notes);
+                }
+                else {
+                    Timber.e(e.getMessage());
+                }
             }
-        }, SERVICE_LATENCY_IN_MILLIS);
+        });
     }
 
     @Override
     public void getNote(final String noteId, final NotesServiceCallback callback) {
-        //TODO: Add network latency here too.
-        Note note = NOTES_SERVICE_DATA.get(noteId);
-        callback.onLoaded(note);
+        ParseQuery<Note> query = ParseQuery.getQuery(Note.class);
+        query.getInBackground(noteId, new GetCallback<Note>() {
+            @Override
+            public void done(Note note, ParseException e) {
+                if(e == null) {
+                    callback.onLoaded(note);
+                }
+                else {
+                    Timber.e(e.getMessage());
+                }
+            }
+        });
     }
 
     @Override
     public void saveNote(Note note) {
-        NOTES_SERVICE_DATA.put(note.getId(), note);
+        note.saveInBackground();
     }
 
 }

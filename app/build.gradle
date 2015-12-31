@@ -2,7 +2,7 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion rootProject.ext.compileSdkVersion
-    buildToolsVersion rootProject.ext.buildToolsVersion
+    buildToolsVersion '23.0.2'
 
     defaultConfig {
         applicationId "com.example.android.testing.notes"
@@ -77,6 +77,16 @@ dependencies {
     androidTestCompile "com.android.support.test.espresso:espresso-core:$rootProject.ext.espressoVersion"
     androidTestCompile "com.android.support.test.espresso:espresso-contrib:$rootProject.ext.espressoVersion"
     androidTestCompile "com.android.support.test.espresso:espresso-intents:$rootProject.ext.espressoVersion"
+
+    compile 'com.jakewharton.timber:timber:4.1.0'
+
+    compile 'frankiesardo:icepick:3.1.0'
+    provided 'frankiesardo:icepick-processor:3.1.0'
+
+    compile 'com.parse:parse-android:1.12.0'
+    compile 'com.parse:parseui-login-android:0.0.1'
+
+    compile 'com.jakewharton:butterknife:7.0.1'
 }
 
 /*

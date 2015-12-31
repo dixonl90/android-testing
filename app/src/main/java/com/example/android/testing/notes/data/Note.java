@@ -16,73 +16,55 @@
 
 package com.example.android.testing.notes.data;
 
-import com.google.common.base.Objects;
-
 import android.support.annotation.Nullable;
 
-import java.util.UUID;
+import com.parse.ParseClassName;
+import com.parse.ParseObject;
 
 /**
  * Immutable model class for a Note.
  */
-public final class Note {
+@ParseClassName("Note")
+public final class Note extends ParseObject {
 
-    private final String mId;
-    @Nullable
-    private final String mTitle;
-    @Nullable
-    private final String mDescription;
-    @Nullable
-    private final String mImageUrl;
+    private static final String TITLE = "title";
+    private static final String DESCRIPTION = "description";
+    private static final String IMAGEURL = "image_url";
 
+    public Note() {
+
+    }
     public Note(@Nullable String title, @Nullable String description) {
         this(title, description, null);
     }
 
     public Note(@Nullable String title, @Nullable String description, @Nullable String imageUrl) {
-        mId = UUID.randomUUID().toString();
-        mTitle = title;
-        mDescription = description;
-        mImageUrl = imageUrl;
+        put(TITLE, title);
+        put(DESCRIPTION, description);
+        put(IMAGEURL, imageUrl);
     }
 
     public String getId() {
-        return mId;
+        return getObjectId();
     }
 
     @Nullable
     public String getTitle() {
-        return mTitle;
+        return getString(TITLE);
     }
 
     @Nullable
     public String getDescription() {
-        return mDescription;
+        return getString(DESCRIPTION);
     }
 
     @Nullable
     public String getImageUrl() {
-        return mImageUrl;
+        return getString(IMAGEURL);
     }
 
     public boolean isEmpty() {
-        return (mTitle == null || "".equals(mTitle)) &&
-                (mDescription == null || "".equals(mDescription));
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Note note = (Note) o;
-        return Objects.equal(mId, note.mId) &&
-                Objects.equal(mTitle, note.mTitle) &&
-                Objects.equal(mDescription, note.mDescription) &&
-                Objects.equal(mImageUrl, note.mImageUrl);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hashCode(mId, mTitle, mDescription, mImageUrl);
+        return (getString(TITLE) == null || "".equals(getString(TITLE))) &&
+                (getString(DESCRIPTION) == null || "".equals(getString(DESCRIPTION)));
     }
 }

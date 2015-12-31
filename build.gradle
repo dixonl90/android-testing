@@ -3,7 +3,7 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:1.5.0'
+        classpath 'com.android.tools.build:gradle:2.0.0-alpha3'
 
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
@@ -13,6 +13,16 @@ buildscript {
 allprojects {
     repositories {
         jcenter()
+
+        mavenCentral()
+
+        maven {
+            url "http://dl.bintray.com/journeyapps/maven"
+        }
+
+        maven {
+            url "https://clojars.org/repo/"
+        }
     }
 }
 
@@ -23,7 +33,7 @@ task clean(type: Delete) {
 // Define versions in a single place
 ext {
     // Sdk and tools
-    minSdkVersion = 10
+    minSdkVersion = 15
     targetSdkVersion = 22
     compileSdkVersion = 23
     buildToolsVersion = '23.0.2'
