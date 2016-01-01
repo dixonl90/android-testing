@@ -27,6 +27,21 @@ public interface NotesServiceApi {
     interface NotesServiceCallback<T> {
 
         void onLoaded(T notes);
+
+        void onError(String message);
+
+    }
+
+    interface RefreshDataCallback {
+
+        void onDataRefreshed();
+
+    }
+
+    interface UploadDataCallback {
+
+        void onDataUploaded();
+
     }
 
     void getAllNotes(NotesServiceCallback<List<Note>> callback);
@@ -34,4 +49,8 @@ public interface NotesServiceApi {
     void getNote(String noteId, NotesServiceCallback<Note> callback);
 
     void saveNote(Note note);
+
+    void refreshData(RefreshDataCallback callback);
+
+    void uploadExistingNotes(UploadDataCallback callback);
 }

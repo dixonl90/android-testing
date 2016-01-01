@@ -16,6 +16,7 @@
 
 package com.example.android.testing.notes.notes;
 
+import android.content.Context;
 import android.support.annotation.NonNull;
 
 import com.example.android.testing.notes.data.Note;
@@ -36,6 +37,12 @@ public interface NotesContract {
         void showAddNote();
 
         void showNoteDetailUi(String noteId);
+
+        void showError(String errorMessage);
+
+        void refreshList();
+
+        boolean isNetworkAvailable();
     }
 
     interface UserActionsListener {
@@ -45,5 +52,7 @@ public interface NotesContract {
         void addNewNote();
 
         void openNoteDetails(@NonNull Note requestedNote);
+
+        void uploadExisitingNotes();
     }
 }

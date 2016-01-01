@@ -58,6 +58,11 @@ public class NoteDetailPresenter implements NoteDetailContract.UserActionsListen
                     showNote(note);
                 }
             }
+
+            @Override
+            public void onError(String message) {
+                mNotesDetailView.showMissingNote();
+            }
         });
     }
 

@@ -32,12 +32,6 @@ public class InMemoryNotesRepository implements NotesRepository {
 
     private final NotesServiceApi mNotesServiceApi;
 
-    /**
-     * This method has reduced visibility for testing and is only visible to tests in the same
-     * package.
-     */
-    @VisibleForTesting
-    List<Note> mCachedNotes;
 
     public InMemoryNotesRepository(@NonNull NotesServiceApi notesServiceApi) {
         mNotesServiceApi = checkNotNull(notesServiceApi);
@@ -46,25 +40,24 @@ public class InMemoryNotesRepository implements NotesRepository {
     @Override
     public void getNotes(@NonNull final LoadNotesCallback callback) {
         checkNotNull(callback);
-        // Load from API only if needed.
-        if (mCachedNotes == null) {
             mNotesServiceApi.getAllNotes(new NotesServiceApi.NotesServiceCallback<List<Note>>() {
                 @Override
                 public void onLoaded(List<Note> notes) {
-                    mCachedNotes = ImmutableList.copyOf(notes);
-                    callback.onNotesLoaded(mCachedNotes);
+                    callback.onNotesLoaded(notes);
+                }
+
+                @Override
+                public void onError(String message) {
+                    callback.onError(message);
                 }
             });
-        } else {
-            callback.onNotesLoaded(mCachedNotes);
-        }
     }
 
     @Override
     public void saveNote(@NonNull Note note) {
         checkNotNull(note);
         mNotesServiceApi.saveNote(note);
-        refreshData();
+//        refreshData();
     }
 
     @Override
@@ -77,12 +70,34 @@ public class InMemoryNotesRepository implements NotesRepository {
             public void onLoaded(Note note) {
                 callback.onNoteLoaded(note);
             }
+
+            @Override
+            public void onError(String message) {
+                callback.onError(message);
+            }
         });
     }
 
     @Override
-    public void refreshData() {
-        mCachedNotes = null;
+    public void refreshData(@NonNull final RefreshDataCallback callback) {
+        checkNotNull(callback);
+        mNotesServiceApi.refreshData(new NotesServiceApi.RefreshDataCallback() {
+            @Override
+            public void onDataRefreshed() {
+                callback.onNotesRefreshed();
+            }
+        });
     }
+
+    @Override
+    public void uploadExistingNotes(final UploadDataCallback callback) {
+        mNotesServiceApi.uploadExistingNotes(new NotesServiceApi.UploadDataCallback() {
+            @Override
+            public void onDataUploaded() {
+                callback.onNotesUploaded();
+            }
+        });
+    }
+
 
 }

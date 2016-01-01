@@ -19,10 +19,16 @@ package com.example.android.testing.notes.notes;
 import com.example.android.testing.notes.data.Note;
 import com.example.android.testing.notes.data.NotesRepository;
 import com.example.android.testing.notes.util.EspressoIdlingResource;
+import com.parse.ParseQuery;
 
+import android.content.Context;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.support.annotation.NonNull;
 
 import java.util.List;
+
+import timber.log.Timber;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -44,21 +50,54 @@ public class NotesPresenter implements NotesContract.UserActionsListener {
 
     @Override
     public void loadNotes(boolean forceUpdate) {
-        mNotesView.setProgressIndicator(true);
-        if (forceUpdate) {
-            mNotesRepository.refreshData();
-        }
 
+
+            mNotesView.setProgressIndicator(true);
+
+            Timber.d("Loading notes...");
+
+            if (forceUpdate && mNotesView.isNetworkAvailable()) {
+                Timber.d("Force update requested");
+                mNotesRepository.refreshData(new NotesRepository.RefreshDataCallback() {
+                    @Override
+                    public void onNotesRefreshed() {
+                        Timber.d("Force update complete");
+                        getNotes();
+                    }
+                });
+            }
+            else
+                getNotes();
+        }
+//        else {
+//            //We're offline!
+//            mNotesView.setProgressIndicator(false);
+//            Timber.w("Offline! Don't refresh!");
+//
+//        }
+//    }
+
+    private void getNotes() {
         // The network request might be handled in a different thread so make sure Espresso knows
         // that the app is busy until the response is handled.
         EspressoIdlingResource.increment(); // App is busy until further notice
 
+        Timber.d("Loading from cache");
+
         mNotesRepository.getNotes(new NotesRepository.LoadNotesCallback() {
             @Override
             public void onNotesLoaded(List<Note> notes) {
+                Timber.d("Loaded from cache");
                 EspressoIdlingResource.decrement(); // Set app as idle.
                 mNotesView.setProgressIndicator(false);
                 mNotesView.showNotes(notes);
+            }
+
+            @Override
+            public void onError(String message) {
+                EspressoIdlingResource.decrement(); // Set app as idle.
+                mNotesView.setProgressIndicator(false);
+
             }
         });
     }
@@ -72,6 +111,15 @@ public class NotesPresenter implements NotesContract.UserActionsListener {
     public void openNoteDetails(@NonNull Note requestedNote) {
         checkNotNull(requestedNote, "requestedNote cannot be null!");
         mNotesView.showNoteDetailUi(requestedNote.getId());
+    }
+
+    public void uploadExisitingNotes() {
+        mNotesRepository.uploadExistingNotes(new NotesRepository.UploadDataCallback() {
+            @Override
+            public void onNotesUploaded() {
+
+            }
+        });
     }
 
 }

@@ -25,6 +25,7 @@ import com.example.android.testing.notes.data.Note;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.net.ConnectivityManager;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
@@ -73,6 +74,9 @@ public class NotesFragment extends Fragment implements NotesContract.View {
     public void onResume() {
         super.onResume();
         mActionsListener.loadNotes(false);
+
+        //Attempt to upload existing notes
+        mActionsListener.uploadExisitingNotes();
     }
 
     @Override
@@ -207,7 +211,11 @@ public class NotesFragment extends Fragment implements NotesContract.View {
         public void onBindViewHolder(ViewHolder viewHolder, int position) {
             Note note = mNotes.get(position);
 
-            viewHolder.title.setText(note.getTitle());
+            if(note.hasUploaded())
+                viewHolder.title.setText(note.getTitle());
+            else
+                viewHolder.title.setText("UP - " + note.getTitle());
+
             viewHolder.description.setText(note.getDescription());
         }
 
@@ -232,15 +240,17 @@ public class NotesFragment extends Fragment implements NotesContract.View {
         public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
             public TextView title;
-
             public TextView description;
+
             private NoteItemListener mItemListener;
 
             public ViewHolder(View itemView, NoteItemListener listener) {
                 super(itemView);
                 mItemListener = listener;
+
                 title = (TextView) itemView.findViewById(R.id.note_detail_title);
                 description = (TextView) itemView.findViewById(R.id.note_detail_description);
+
                 itemView.setOnClickListener(this);
             }
 
@@ -249,7 +259,6 @@ public class NotesFragment extends Fragment implements NotesContract.View {
                 int position = getAdapterPosition();
                 Note note = getItem(position);
                 mItemListener.onNoteClick(note);
-
             }
         }
     }
@@ -257,6 +266,23 @@ public class NotesFragment extends Fragment implements NotesContract.View {
     public interface NoteItemListener {
 
         void onNoteClick(Note clickedNote);
+    }
+
+    @Override
+    public void showError(String errorMessage) {
+        Snackbar.make(getView(), "Error: " + errorMessage, Snackbar.LENGTH_LONG).show();
+    }
+
+    @Override
+    public void refreshList() {
+        mListAdapter.notifyDataSetChanged();
+    }
+
+    public boolean isNetworkAvailable() {
+        ConnectivityManager cm = (ConnectivityManager) getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
+
+        return cm.getActiveNetworkInfo() != null && cm.getActiveNetworkInfo().isAvailable()
+                && cm.getActiveNetworkInfo().isConnected();
     }
 
 }

@@ -27,13 +27,15 @@ import com.parse.ParseObject;
 @ParseClassName("Note")
 public final class Note extends ParseObject {
 
-    private static final String TITLE = "title";
-    private static final String DESCRIPTION = "description";
-    private static final String IMAGEURL = "image_url";
+    public static final String TITLE = "title";
+    public static final String DESCRIPTION = "description";
+    public static final String IMAGE_URL = "image_url";
+    public static final String HAS_UPLOADED = "has_uploaded";
 
     public Note() {
 
     }
+
     public Note(@Nullable String title, @Nullable String description) {
         this(title, description, null);
     }
@@ -41,7 +43,11 @@ public final class Note extends ParseObject {
     public Note(@Nullable String title, @Nullable String description, @Nullable String imageUrl) {
         put(TITLE, title);
         put(DESCRIPTION, description);
-        put(IMAGEURL, imageUrl);
+        if(imageUrl != null)
+            put(IMAGE_URL, imageUrl);
+
+        //We've not uploaded this yet!
+        setUploaded(false);
     }
 
     public String getId() {
@@ -60,7 +66,15 @@ public final class Note extends ParseObject {
 
     @Nullable
     public String getImageUrl() {
-        return getString(IMAGEURL);
+        return getString(IMAGE_URL);
+    }
+
+    public boolean hasUploaded() {
+        return getBoolean(HAS_UPLOADED);
+    }
+
+    public void setUploaded(boolean hasUploaded) {
+        put(HAS_UPLOADED, hasUploaded);
     }
 
     public boolean isEmpty() {

@@ -28,11 +28,27 @@ public interface NotesRepository {
     interface LoadNotesCallback {
 
         void onNotesLoaded(List<Note> notes);
+
+        void onError(String message);
     }
 
     interface GetNoteCallback {
 
         void onNoteLoaded(Note note);
+
+        void onError(String message);
+    }
+
+    interface RefreshDataCallback {
+
+        void onNotesRefreshed();
+
+    }
+
+    interface UploadDataCallback {
+
+        void onNotesUploaded();
+
     }
 
     void getNotes(@NonNull LoadNotesCallback callback);
@@ -41,6 +57,8 @@ public interface NotesRepository {
 
     void saveNote(@NonNull Note note);
 
-    void refreshData();
+    void refreshData(@NonNull RefreshDataCallback callback);
+
+    void uploadExistingNotes(@NonNull UploadDataCallback callback);
 
 }
