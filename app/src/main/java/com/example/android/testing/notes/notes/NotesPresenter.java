@@ -74,4 +74,9 @@ public class NotesPresenter implements NotesContract.UserActionsListener {
         mNotesView.showNoteDetailUi(requestedNote.getId());
     }
 
+    @Override
+    public void removeNote(@NonNull Note noteToDelete) {
+        mNotesRepository.deleteNote(noteToDelete);
+    }
+
 }

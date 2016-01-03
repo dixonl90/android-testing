@@ -21,8 +21,11 @@ import com.example.android.testing.notes.addnote.AddNoteActivity;
 import com.example.android.testing.notes.notedetail.NoteDetailActivity;
 import com.example.android.testing.notes.R;
 import com.example.android.testing.notes.data.Note;
+import com.parse.DeleteCallback;
+import com.parse.ParseException;
 
 import android.app.Activity;
+import android.content.ClipData;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -32,15 +35,22 @@ import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
-import android.support.v7.widget.GridLayoutManager;
+import android.support.v7.widget.DefaultItemAnimator;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.helper.ItemTouchHelper;
+import android.support.v7.widget.helper.ItemTouchHelper.SimpleCallback;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
+
+import timber.log.Timber;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -99,13 +109,35 @@ public class NotesFragment extends Fragment implements NotesContract.View {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View root = inflater.inflate(R.layout.fragment_notes, container, false);
-        RecyclerView recyclerView = (RecyclerView) root.findViewById(R.id.notes_list);
+        final RecyclerView recyclerView = (RecyclerView) root.findViewById(R.id.notes_list);
         recyclerView.setAdapter(mListAdapter);
 
-        int numColumns = getContext().getResources().getInteger(R.integer.num_notes_columns);
 
         recyclerView.setHasFixedSize(true);
-        recyclerView.setLayoutManager(new GridLayoutManager(getContext(), numColumns));
+        recyclerView.addItemDecoration(new DividerItemDecoration(getContext(), null));
+        recyclerView.setItemAnimator(new DefaultItemAnimator());
+        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+
+        SimpleCallback simpleItemTouchCallback = new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT|ItemTouchHelper.RIGHT) {
+            @Override
+            public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target) {
+                return false;
+            }
+
+            @Override
+            public void onSwiped(final RecyclerView.ViewHolder viewHolder, int direction) {
+
+                final View undo = viewHolder.itemView.findViewById(R.id.undo_layout);
+                mListAdapter.notifyItemChanged(viewHolder.getAdapterPosition());
+                mListAdapter.mNotesToRemove.add(mListAdapter.mNotes.get(viewHolder.getAdapterPosition()));
+
+
+            }
+        };
+
+        ItemTouchHelper itemTouchHelper = new ItemTouchHelper(simpleItemTouchCallback);
+
+        itemTouchHelper.attachToRecyclerView(recyclerView);
 
         // Set up floating action button
         FloatingActionButton fab =
@@ -126,7 +158,7 @@ public class NotesFragment extends Fragment implements NotesContract.View {
                 ContextCompat.getColor(getActivity(), R.color.colorPrimary),
                 ContextCompat.getColor(getActivity(), R.color.colorAccent),
                 ContextCompat.getColor(getActivity(), R.color.colorPrimaryDark));
-       swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+        swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
                 mActionsListener.loadNotes(true);
@@ -142,6 +174,13 @@ public class NotesFragment extends Fragment implements NotesContract.View {
         @Override
         public void onNoteClick(Note clickedNote) {
             mActionsListener.openNoteDetails(clickedNote);
+        }
+
+        @Override
+        public void onItemRemove(Note removedNote) {
+            Timber.d("We need to remove the item now!");
+            mActionsListener.removeNote(removedNote);
+//            mActionsListener.loadNotes(true);
         }
     };
 
@@ -170,7 +209,7 @@ public class NotesFragment extends Fragment implements NotesContract.View {
 
     @Override
     public void showAddNote() {
-        Intent intent = new Intent(getContext(),AddNoteActivity.class);
+        Intent intent = new Intent(getContext(), AddNoteActivity.class);
         startActivityForResult(intent, REQUEST_ADD_NOTE);
     }
 
@@ -188,10 +227,13 @@ public class NotesFragment extends Fragment implements NotesContract.View {
 
         private List<Note> mNotes;
         private NoteItemListener mItemListener;
+        private SimpleDateFormat simpleDateFormat;
+        public List<Note> mNotesToRemove;
 
         public NotesAdapter(List<Note> notes, NoteItemListener itemListener) {
             setList(notes);
             mItemListener = itemListener;
+            mNotesToRemove = new ArrayList<>();
         }
 
         @Override
@@ -200,15 +242,56 @@ public class NotesFragment extends Fragment implements NotesContract.View {
             LayoutInflater inflater = LayoutInflater.from(context);
             View noteView = inflater.inflate(R.layout.item_note, parent, false);
 
+            simpleDateFormat = new SimpleDateFormat("dd-M-yyyy hh:mm:ss");
+
             return new ViewHolder(noteView, mItemListener);
         }
 
         @Override
-        public void onBindViewHolder(ViewHolder viewHolder, int position) {
-            Note note = mNotes.get(position);
+        public void onBindViewHolder(final ViewHolder viewHolder, final int position) {
+            final Note note = mNotes.get(position);
+            final View undo = viewHolder.itemView.findViewById(R.id.undo_layout);
 
             viewHolder.title.setText(note.getTitle());
-            viewHolder.description.setText(note.getDescription());
+            viewHolder.createdDate.setText(simpleDateFormat.format(note.getCreatedAt()));
+
+            if (undo != null) {
+
+                if(mNotesToRemove.contains(note)) {
+                    undo.setVisibility(View.VISIBLE);
+
+                    final Runnable delayedDelete = new Runnable() {
+                        public void run() {
+                            if (undo.isShown()) {
+                                Timber.d("Delete %d after timeout", viewHolder.getAdapterPosition());
+                                removeNote(note, position);
+                            }
+                        }
+                    };
+
+                    TextView button = (TextView) viewHolder.itemView.findViewById(R.id.note_detail_undo_button);
+                    button.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            notifyItemChanged(viewHolder.getAdapterPosition());
+                            undo.setVisibility(View.GONE);
+                            Timber.d("Undo removal! Position: %d", viewHolder.getAdapterPosition());
+                            mNotesToRemove.remove(note);
+                            undo.removeCallbacks(delayedDelete);
+                        }
+                    });
+
+                    undo.postDelayed(delayedDelete, 5000); //5 second delay
+                }
+                else
+                    undo.setVisibility(View.GONE);
+            }
+        }
+
+        private void removeNote(final Note note, final int position) {
+            mNotes.remove(note);
+            notifyItemRemoved(position);
+            mItemListener.onItemRemove(note);
         }
 
         public void replaceData(List<Note> notes) {
@@ -232,15 +315,19 @@ public class NotesFragment extends Fragment implements NotesContract.View {
         public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
             public TextView title;
+            public TextView createdDate;
 
-            public TextView description;
             private NoteItemListener mItemListener;
 
             public ViewHolder(View itemView, NoteItemListener listener) {
                 super(itemView);
                 mItemListener = listener;
+
                 title = (TextView) itemView.findViewById(R.id.note_detail_title);
-                description = (TextView) itemView.findViewById(R.id.note_detail_description);
+                createdDate = (TextView) itemView.findViewById(R.id.note_detail_created_date);
+
+                itemView.findViewById(R.id.note_row).setOnClickListener(this);
+
                 itemView.setOnClickListener(this);
             }
 
@@ -257,6 +344,8 @@ public class NotesFragment extends Fragment implements NotesContract.View {
     public interface NoteItemListener {
 
         void onNoteClick(Note clickedNote);
+
+        void onItemRemove(Note removedNote);
     }
 
 }

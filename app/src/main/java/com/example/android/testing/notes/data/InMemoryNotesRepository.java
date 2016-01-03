@@ -32,13 +32,6 @@ public class InMemoryNotesRepository implements NotesRepository {
 
     private final NotesServiceApi mNotesServiceApi;
 
-    /**
-     * This method has reduced visibility for testing and is only visible to tests in the same
-     * package.
-     */
-    @VisibleForTesting
-    List<Note> mCachedNotes;
-
     public InMemoryNotesRepository(@NonNull NotesServiceApi notesServiceApi) {
         mNotesServiceApi = checkNotNull(notesServiceApi);
     }
@@ -47,17 +40,12 @@ public class InMemoryNotesRepository implements NotesRepository {
     public void getNotes(@NonNull final LoadNotesCallback callback) {
         checkNotNull(callback);
         // Load from API only if needed.
-        if (mCachedNotes == null) {
-            mNotesServiceApi.getAllNotes(new NotesServiceApi.NotesServiceCallback<List<Note>>() {
-                @Override
-                public void onLoaded(List<Note> notes) {
-                    mCachedNotes = ImmutableList.copyOf(notes);
-                    callback.onNotesLoaded(mCachedNotes);
-                }
-            });
-        } else {
-            callback.onNotesLoaded(mCachedNotes);
-        }
+        mNotesServiceApi.getAllNotes(new NotesServiceApi.NotesServiceCallback<List<Note>>() {
+            @Override
+            public void onLoaded(List<Note> notes) {
+                callback.onNotesLoaded(notes);
+            }
+        });
     }
 
     @Override
@@ -82,7 +70,12 @@ public class InMemoryNotesRepository implements NotesRepository {
 
     @Override
     public void refreshData() {
-        mCachedNotes = null;
     }
+
+    @Override
+    public void deleteNote(@NonNull Note note) {
+        mNotesServiceApi.deleteNote(note);
+    }
+
 
 }

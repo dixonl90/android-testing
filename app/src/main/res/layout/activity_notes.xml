@@ -21,7 +21,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".NotesActivity"
+    tools:context=".notes.NotesActivity"
     tools:openDrawer="start">
 
     <LinearLayout
@@ -35,8 +35,8 @@
             android:layout_height="wrap_content"
             android:background="?attr/colorPrimary"
             android:minHeight="?attr/actionBarSize"
-            app:theme="@style/Toolbar"
-            app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
+            android:theme="@style/Toolbar"
+            android:popupTheme="@style/ThemeOverlay.AppCompat.Light"
             />
 
         <android.support.design.widget.CoordinatorLayout

@@ -28,7 +28,7 @@ import com.parse.ParseObject;
 public final class Note extends ParseObject {
 
     private static final String TITLE = "title";
-    private static final String DESCRIPTION = "description";
+    private static final String DESCRIPTION = "createdDate";
     private static final String IMAGEURL = "image_url";
 
     public Note() {
@@ -41,7 +41,8 @@ public final class Note extends ParseObject {
     public Note(@Nullable String title, @Nullable String description, @Nullable String imageUrl) {
         put(TITLE, title);
         put(DESCRIPTION, description);
-        put(IMAGEURL, imageUrl);
+        if(imageUrl != null)
+            put(IMAGEURL, imageUrl);
     }
 
     public String getId() {
@@ -62,7 +63,6 @@ public final class Note extends ParseObject {
     public String getImageUrl() {
         return getString(IMAGEURL);
     }
-
     public boolean isEmpty() {
         return (getString(TITLE) == null || "".equals(getString(TITLE))) &&
                 (getString(DESCRIPTION) == null || "".equals(getString(DESCRIPTION)));

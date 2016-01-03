@@ -107,7 +107,7 @@ public class InMemoryNotesRepositoryTest {
 
     @Test
     public void saveNote_savesNoteToServiceAPIAndInvalidatesCache() {
-        // Given a stub note with title and description
+        // Given a stub note with title and createdDate
         Note newNote = new Note(NOTE_TITLE, "Some Note Description");
 
         // When a note is saved to the notes repository

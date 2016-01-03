@@ -34,4 +34,6 @@ public interface NotesServiceApi {
     void getNote(String noteId, NotesServiceCallback<Note> callback);
 
     void saveNote(Note note);
+
+    void deleteNote(Note note);
 }

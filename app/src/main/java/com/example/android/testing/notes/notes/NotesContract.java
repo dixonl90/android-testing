@@ -45,5 +45,7 @@ public interface NotesContract {
         void addNewNote();
 
         void openNoteDetails(@NonNull Note requestedNote);
+
+        void removeNote(@NonNull Note noteToDelete);
     }
 }
