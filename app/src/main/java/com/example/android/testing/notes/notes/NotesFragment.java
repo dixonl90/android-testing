@@ -180,8 +180,7 @@ public class NotesFragment extends Fragment implements NotesContract.View {
         @Override
         public void onItemRemove(Note removedNote) {
             Timber.d("We need to remove the item now!");
-            mActionsListener.removeNote(removedNote);
-//            mActionsListener.loadNotes(true);
+            mActionsListener.deleteNote(removedNote);
         }
     };
 
