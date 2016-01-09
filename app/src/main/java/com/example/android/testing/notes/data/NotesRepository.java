@@ -57,4 +57,6 @@ public interface NotesRepository {
 
     void uploadExistingNotes(@NonNull UploadDataCallback callback);
 
+    void deleteNote(@NonNull Note note);
+
 }

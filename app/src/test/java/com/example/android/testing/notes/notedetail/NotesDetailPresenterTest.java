@@ -38,7 +38,7 @@ public class NotesDetailPresenterTest {
 
     public static final String TITLE_TEST = "title";
 
-    public static final String DESCRIPTION_TEST = "description";
+    public static final String DESCRIPTION_TEST = "createdDate";
 
     @Mock
     private NotesRepository mNotesRepository;
@@ -80,7 +80,7 @@ public class NotesDetailPresenterTest {
         // When note is finally loaded
         mGetNoteCallbackCaptor.getValue().onNoteLoaded(note); // Trigger callback
 
-        // Then progress indicator is hidden and title and description are shown in UI
+        // Then progress indicator is hidden and title and createdDate are shown in UI
         verify(mNoteDetailView).setProgressIndicator(false);
         verify(mNoteDetailView).showTitle(TITLE_TEST);
         verify(mNoteDetailView).showDescription(DESCRIPTION_TEST);

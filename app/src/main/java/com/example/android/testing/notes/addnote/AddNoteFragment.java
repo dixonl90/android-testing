@@ -50,7 +50,7 @@ import java.io.IOException;
 import static com.google.common.base.Preconditions.checkState;
 
 /**
- * Main UI for the add note screen. Users can enter a note title and description. Images can be
+ * Main UI for the add note screen. Users can enter a note title and createdDate. Images can be
  * added to notes by clicking on the options menu.
  */
 public class AddNoteFragment extends Fragment implements AddNoteContract.View {

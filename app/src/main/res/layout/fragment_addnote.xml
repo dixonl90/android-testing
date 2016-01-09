@@ -33,6 +33,7 @@
                 android:layout_height="wrap_content"
                 android:hint="@string/title_hint"
                 android:singleLine="true"
+                android:inputType="textCapWords"
                 android:textAppearance="@style/TextAppearance.AppCompat.Title"/>
 
         <EditText
@@ -40,6 +41,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="350dp"
                 android:gravity="top"
+                android:inputType="textCapSentences"
                 android:hint="@string/description_hint"/>
 
         <ImageView

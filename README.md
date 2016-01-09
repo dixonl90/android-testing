@@ -1,13 +1,6 @@
-# Android Testing Codelab
+# Parse MVP based on Android Testing Codelab
 
-This folder contains the source code for the Android testing codelab. It gives an introduction into testing on Android, including unit tests and UI tests. 
-
-### Getting Started
-
-Check out branch `master` or any of our step branches `step-1-5` to start and follow the instructions here: http://www.code-labs.io/codelabs/android-testing/
-
-
-Clone this repository, enter the top level directory and run <code>./gradlew tasks</code> to get an overview of all the tasks available for this project.
+This folder contains the source code for an example of using Parse within the MVP architecture based on the Android testing codelab.
 
 ### License
 
