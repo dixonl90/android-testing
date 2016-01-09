@@ -43,6 +43,8 @@ public interface NotesContract {
         void refreshList();
 
         boolean isNetworkAvailable();
+
+        void showOfflineMessage(String message);
     }
 
     interface UserActionsListener {

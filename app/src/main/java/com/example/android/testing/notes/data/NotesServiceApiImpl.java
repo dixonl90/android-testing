@@ -39,6 +39,7 @@ public class NotesServiceApiImpl implements NotesServiceApi {
     public void getAllNotes(final NotesServiceCallback callback) {
         ParseQuery<Note> query = ParseQuery.getQuery(Note.class);
         query.fromPin(ALL_NOTES);
+        query.orderByDescending(Note.CREATED);
         query.findInBackground(new FindCallback<Note>() {
             @Override
             public void done(List<Note> notes, ParseException e) {
@@ -56,7 +57,8 @@ public class NotesServiceApiImpl implements NotesServiceApi {
     public void getNote(final String noteId, final NotesServiceCallback callback) {
         ParseQuery<Note> query = ParseQuery.getQuery(Note.class);
         query.fromPin(ALL_NOTES);
-        query.getInBackground(noteId, new GetCallback<Note>() {
+        query.whereEqualTo(Note.ID, noteId);
+        query.getFirstInBackground(new GetCallback<Note>() {
             @Override
             public void done(Note note, ParseException e) {
                 if(e == null) {
@@ -94,6 +96,7 @@ public class NotesServiceApiImpl implements NotesServiceApi {
             @Override
             public void done(List<Note> notes, ParseException e) {
                 if(e == null) {
+                    Timber.d("Found %d notes to upload!", notes.size());
                     for (final Note note : notes) {
                         note.setUploaded(true);
                         note.saveInBackground(new SaveCallback() {
@@ -150,12 +153,23 @@ public class NotesServiceApiImpl implements NotesServiceApi {
                                 }
                                 else {
                                     Timber.e("Could not pin note: %s - %s", note.getId(), e.getMessage());
+                                    note.setUploaded(false);
                                 }
                             }
                         });
                     }
 
-                    callback.onLoaded(notes);
+                    getAllNotes(new NotesServiceCallback() {
+                        @Override
+                        public void onLoaded(Object notes) {
+                            callback.onLoaded((List<Note>) notes);
+                        }
+
+                        @Override
+                        public void onError(String message) {
+
+                        }
+                    });
                 }
                 else {
                     Timber.e(e.getMessage());

@@ -21,12 +21,17 @@ import android.support.annotation.Nullable;
 import com.parse.ParseClassName;
 import com.parse.ParseObject;
 
+import java.util.Date;
+import java.util.UUID;
+
 /**
  * Immutable model class for a Note.
  */
 @ParseClassName("Note")
 public final class Note extends ParseObject {
 
+    public static final String ID = "uuid";
+    public static final String CREATED = "created";
     public static final String TITLE = "title";
     public static final String DESCRIPTION = "description";
     public static final String IMAGE_URL = "image_url";
@@ -41,6 +46,11 @@ public final class Note extends ParseObject {
     }
 
     public Note(@Nullable String title, @Nullable String description, @Nullable String imageUrl) {
+
+        //Needed for offline
+        put(ID, UUID.randomUUID().toString());
+        put(CREATED, new Date());
+
         put(TITLE, title);
         put(DESCRIPTION, description);
         if(imageUrl != null)
@@ -51,7 +61,11 @@ public final class Note extends ParseObject {
     }
 
     public String getId() {
-        return getObjectId();
+        return getString(ID);
+    }
+
+    public Date getCreated() {
+        return getDate(CREATED);
     }
 
     @Nullable

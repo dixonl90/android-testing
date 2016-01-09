@@ -49,42 +49,47 @@ public class NotesPresenter implements NotesContract.UserActionsListener {
     public void loadNotes(boolean forceUpdate) {
 
         Timber.d("Loading notes...");
-
         mNotesView.setProgressIndicator(true);
-        if (forceUpdate) {
-            mNotesRepository.refreshData(new NotesRepository.LoadNotesCallback() {
-                @Override
-                public void onNotesLoaded(List<Note> notes) {
-                    Timber.d("Refreshed notes!");
-                    mNotesView.setProgressIndicator(false);
-                    mNotesView.showNotes(notes);
-                }
 
-                @Override
-                public void onError(String message) {
-                    Timber.e(message);
-                }
-            });
+        if(mNotesView.isNetworkAvailable()) {
+            if (forceUpdate) {
+                mNotesRepository.refreshData(new NotesRepository.LoadNotesCallback() {
+                    @Override
+                    public void onNotesLoaded(List<Note> notes) {
+                        Timber.d("Refreshed notes!");
+                        mNotesView.setProgressIndicator(false);
+                        mNotesView.showNotes(notes);
+                    }
+
+                    @Override
+                    public void onError(String message) {
+                        Timber.e(message);
+                    }
+                });
+            }
         }
         else {
-            // The network request might be handled in a different thread so make sure Espresso knows
-            // that the app is busy until the response is handled.
-            EspressoIdlingResource.increment(); // App is busy until further notice
-
-            mNotesRepository.getNotes(new NotesRepository.LoadNotesCallback() {
-                @Override
-                public void onNotesLoaded(List<Note> notes) {
-                    EspressoIdlingResource.decrement(); // Set app as idle.
-                    mNotesView.setProgressIndicator(false);
-                    mNotesView.showNotes(notes);
-                }
-
-                @Override
-                public void onError(String message) {
-                    Timber.e(message);
-                }
-            });
+            mNotesView.showOfflineMessage("No internet access, data my be out of date!");
         }
+
+        // The network request might be handled in a different thread so make sure Espresso knows
+        // that the app is busy until the response is handled.
+        EspressoIdlingResource.increment(); // App is busy until further notice
+
+        mNotesRepository.getNotes(new NotesRepository.LoadNotesCallback() {
+            @Override
+            public void onNotesLoaded(List<Note> notes) {
+                EspressoIdlingResource.decrement(); // Set app as idle.
+                mNotesView.setProgressIndicator(false);
+                mNotesView.showNotes(notes);
+            }
+
+            @Override
+            public void onError(String message) {
+                Timber.e(message);
+            }
+        });
+
     }
 
     @Override
@@ -100,7 +105,18 @@ public class NotesPresenter implements NotesContract.UserActionsListener {
 
     @Override
     public void uploadExisitingNotes() {
-
+        if(mNotesView.isNetworkAvailable()) {
+            Timber.d("Trying to upload notes!");
+            mNotesRepository.uploadExistingNotes(new NotesRepository.UploadDataCallback() {
+                @Override
+                public void onNotesUploaded() {
+                    Timber.d("Upload complete!");
+                }
+            });
+        }
+        else {
+            Timber.w("Can't upload notes, no network!");
+        }
     }
 
     @Override

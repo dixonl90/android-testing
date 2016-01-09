@@ -57,6 +57,7 @@ public class AddNotePresenter implements AddNoteContract.UserActionsListener {
             imageUrl = mImageFile.getPath();
         }
         Note newNote = new Note(title, description, imageUrl);
+
         if (newNote.isEmpty()) {
             mAddNoteView.showEmptyNoteError();
         } else {

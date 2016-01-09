@@ -28,6 +28,7 @@ import android.app.Activity;
 import android.content.ClipData;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
 import android.net.ConnectivityManager;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -84,6 +85,7 @@ public class NotesFragment extends Fragment implements NotesContract.View {
     public void onResume() {
         super.onResume();
         mActionsListener.loadNotes(false);
+        mActionsListener.uploadExisitingNotes();
     }
 
     @Override
@@ -163,6 +165,7 @@ public class NotesFragment extends Fragment implements NotesContract.View {
             @Override
             public void onRefresh() {
                 mActionsListener.loadNotes(true);
+                mActionsListener.uploadExisitingNotes();
             }
         });
         return root;
@@ -253,7 +256,14 @@ public class NotesFragment extends Fragment implements NotesContract.View {
             final View undo = viewHolder.itemView.findViewById(R.id.undo_layout);
 
             viewHolder.title.setText(note.getTitle());
-            viewHolder.createdDate.setText(simpleDateFormat.format(note.getCreatedAt()));
+            viewHolder.createdDate.setText(simpleDateFormat.format(note.getCreated()));
+
+            if(!note.hasUploaded()) {
+                viewHolder.title.setTextColor(Color.parseColor("#f51800"));
+            }
+            else {
+                viewHolder.title.setTextColor(Color.BLACK);
+            }
 
             if (undo != null) {
 
@@ -362,6 +372,11 @@ public class NotesFragment extends Fragment implements NotesContract.View {
 
         return cm.getActiveNetworkInfo() != null && cm.getActiveNetworkInfo().isAvailable()
                 && cm.getActiveNetworkInfo().isConnected();
+    }
+
+    @Override
+    public void showOfflineMessage(String message) {
+        Snackbar.make(getView(), message, Snackbar.LENGTH_LONG).show();
     }
 
 }
