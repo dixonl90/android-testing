@@ -21,6 +21,7 @@ import com.example.android.testing.notes.data.NotesRepository;
 import com.example.android.testing.notes.util.EspressoIdlingResource;
 
 import android.support.annotation.NonNull;
+import android.support.design.widget.Snackbar;
 
 import java.util.List;
 import java.util.Timer;
@@ -52,6 +53,7 @@ public class NotesPresenter implements NotesContract.UserActionsListener {
         mNotesView.setProgressIndicator(true);
 
         if(mNotesView.isNetworkAvailable()) {
+            mNotesView.dismissSnackbar();
             if (forceUpdate) {
                 mNotesRepository.refreshData(new NotesRepository.LoadNotesCallback() {
                     @Override
@@ -69,7 +71,8 @@ public class NotesPresenter implements NotesContract.UserActionsListener {
             }
         }
         else {
-            mNotesView.showOfflineMessage("No internet access, data my be out of date!");
+            mNotesView.showSnackbar("No internet access, data my be out of date!",
+                    Snackbar.LENGTH_INDEFINITE);
         }
 
         // The network request might be handled in a different thread so make sure Espresso knows

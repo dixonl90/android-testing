@@ -18,6 +18,7 @@ package com.example.android.testing.notes.notes;
 
 import android.content.Context;
 import android.support.annotation.NonNull;
+import android.support.design.widget.Snackbar;
 
 import com.example.android.testing.notes.data.Note;
 
@@ -44,7 +45,9 @@ public interface NotesContract {
 
         boolean isNetworkAvailable();
 
-        void showOfflineMessage(String message);
+        void showSnackbar(String message, int timeout);
+
+        void dismissSnackbar();
     }
 
     interface UserActionsListener {

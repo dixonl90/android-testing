@@ -5,6 +5,7 @@ import android.app.Application;
 import com.example.android.testing.notes.data.Note;
 import com.parse.Parse;
 import com.parse.ParseObject;
+import com.squareup.leakcanary.LeakCanary;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -35,6 +36,8 @@ public class ParseNotesApplication extends Application {
         } catch (IOException e) {
             Timber.d("Could not open properties file...");
         }
+
+        LeakCanary.install(this);
 
         if(BuildConfig.DEBUG) {
             //Debug logging

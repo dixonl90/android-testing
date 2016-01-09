@@ -67,6 +67,8 @@ public class NotesFragment extends Fragment implements NotesContract.View {
 
     private NotesAdapter mListAdapter;
 
+    private static Snackbar mSnackbar;
+
     public NotesFragment() {
         // Requires empty public constructor
     }
@@ -375,8 +377,16 @@ public class NotesFragment extends Fragment implements NotesContract.View {
     }
 
     @Override
-    public void showOfflineMessage(String message) {
-        Snackbar.make(getView(), message, Snackbar.LENGTH_LONG).show();
+    public void showSnackbar(String message, int timeout) {
+        mSnackbar = Snackbar.make(getView(), message, timeout);
+        mSnackbar.show();
+    }
+
+    @Override
+    public void dismissSnackbar() {
+        if(mSnackbar != null)
+            if(mSnackbar.isShownOrQueued())
+                mSnackbar.dismiss();
     }
 
 }
