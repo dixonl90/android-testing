@@ -39,12 +39,6 @@ public interface NotesRepository {
         void onError(String message);
     }
 
-    interface RefreshDataCallback {
-
-        void onNotesRefreshed();
-
-    }
-
     interface UploadDataCallback {
 
         void onNotesUploaded();
@@ -57,7 +51,9 @@ public interface NotesRepository {
 
     void saveNote(@NonNull Note note);
 
-    void refreshData(@NonNull RefreshDataCallback callback);
+    void refreshData(@NonNull LoadNotesCallback callback);
+
+    void deleteNote(@NonNull Note note);
 
     void uploadExistingNotes(@NonNull UploadDataCallback callback);
 

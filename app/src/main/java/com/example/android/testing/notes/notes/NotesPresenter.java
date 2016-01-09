@@ -19,14 +19,11 @@ package com.example.android.testing.notes.notes;
 import com.example.android.testing.notes.data.Note;
 import com.example.android.testing.notes.data.NotesRepository;
 import com.example.android.testing.notes.util.EspressoIdlingResource;
-import com.parse.ParseQuery;
 
-import android.content.Context;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.support.annotation.NonNull;
 
 import java.util.List;
+import java.util.Timer;
 
 import timber.log.Timber;
 
@@ -51,55 +48,43 @@ public class NotesPresenter implements NotesContract.UserActionsListener {
     @Override
     public void loadNotes(boolean forceUpdate) {
 
+        Timber.d("Loading notes...");
 
-            mNotesView.setProgressIndicator(true);
+        mNotesView.setProgressIndicator(true);
+        if (forceUpdate) {
+            mNotesRepository.refreshData(new NotesRepository.LoadNotesCallback() {
+                @Override
+                public void onNotesLoaded(List<Note> notes) {
+                    Timber.d("Refreshed notes!");
+                    mNotesView.setProgressIndicator(false);
+                    mNotesView.showNotes(notes);
+                }
 
-            Timber.d("Loading notes...");
-
-            if (forceUpdate && mNotesView.isNetworkAvailable()) {
-                Timber.d("Force update requested");
-                mNotesRepository.refreshData(new NotesRepository.RefreshDataCallback() {
-                    @Override
-                    public void onNotesRefreshed() {
-                        Timber.d("Force update complete");
-                        getNotes();
-                    }
-                });
-            }
-            else
-                getNotes();
+                @Override
+                public void onError(String message) {
+                    Timber.e(message);
+                }
+            });
         }
-//        else {
-//            //We're offline!
-//            mNotesView.setProgressIndicator(false);
-//            Timber.w("Offline! Don't refresh!");
-//
-//        }
-//    }
+        else {
+            // The network request might be handled in a different thread so make sure Espresso knows
+            // that the app is busy until the response is handled.
+            EspressoIdlingResource.increment(); // App is busy until further notice
 
-    private void getNotes() {
-        // The network request might be handled in a different thread so make sure Espresso knows
-        // that the app is busy until the response is handled.
-        EspressoIdlingResource.increment(); // App is busy until further notice
+            mNotesRepository.getNotes(new NotesRepository.LoadNotesCallback() {
+                @Override
+                public void onNotesLoaded(List<Note> notes) {
+                    EspressoIdlingResource.decrement(); // Set app as idle.
+                    mNotesView.setProgressIndicator(false);
+                    mNotesView.showNotes(notes);
+                }
 
-        Timber.d("Loading from cache");
-
-        mNotesRepository.getNotes(new NotesRepository.LoadNotesCallback() {
-            @Override
-            public void onNotesLoaded(List<Note> notes) {
-                Timber.d("Loaded from cache");
-                EspressoIdlingResource.decrement(); // Set app as idle.
-                mNotesView.setProgressIndicator(false);
-                mNotesView.showNotes(notes);
-            }
-
-            @Override
-            public void onError(String message) {
-                EspressoIdlingResource.decrement(); // Set app as idle.
-                mNotesView.setProgressIndicator(false);
-
-            }
-        });
+                @Override
+                public void onError(String message) {
+                    Timber.e(message);
+                }
+            });
+        }
     }
 
     @Override
@@ -113,13 +98,14 @@ public class NotesPresenter implements NotesContract.UserActionsListener {
         mNotesView.showNoteDetailUi(requestedNote.getId());
     }
 
+    @Override
     public void uploadExisitingNotes() {
-        mNotesRepository.uploadExistingNotes(new NotesRepository.UploadDataCallback() {
-            @Override
-            public void onNotesUploaded() {
 
-            }
-        });
+    }
+
+    @Override
+    public void deleteNote(@NonNull Note note) {
+        mNotesRepository.deleteNote(note);
     }
 
 }

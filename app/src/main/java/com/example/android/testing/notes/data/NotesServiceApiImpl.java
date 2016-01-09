@@ -24,25 +24,25 @@ import com.parse.ParseObject;
 import com.parse.ParseQuery;
 import com.parse.SaveCallback;
 
-import java.sql.Time;
 import java.util.List;
 
 import timber.log.Timber;
 
+/**
+ * Implementation of the Notes Service API that adds a latency simulating network.
+ */
 public class NotesServiceApiImpl implements NotesServiceApi {
 
-    private static final String NOTES_PIN = "notes";
+    private static String ALL_NOTES = "ALL_NOTES";
 
     @Override
     public void getAllNotes(final NotesServiceCallback callback) {
-
         ParseQuery<Note> query = ParseQuery.getQuery(Note.class);
-        query.fromPin(NOTES_PIN);
+        query.fromPin(ALL_NOTES);
         query.findInBackground(new FindCallback<Note>() {
             @Override
             public void done(List<Note> notes, ParseException e) {
                 if(e == null) {
-                    Timber.d("Found %d notes in cache!", notes.size());
                     callback.onLoaded(notes);
                 }
                 else {
@@ -55,7 +55,7 @@ public class NotesServiceApiImpl implements NotesServiceApi {
     @Override
     public void getNote(final String noteId, final NotesServiceCallback callback) {
         ParseQuery<Note> query = ParseQuery.getQuery(Note.class);
-        query.fromPin(NOTES_PIN);
+        query.fromPin(ALL_NOTES);
         query.getInBackground(noteId, new GetCallback<Note>() {
             @Override
             public void done(Note note, ParseException e) {
@@ -71,49 +71,15 @@ public class NotesServiceApiImpl implements NotesServiceApi {
 
     @Override
     public void saveNote(final Note note) {
-        note.pinInBackground(NOTES_PIN, new SaveCallback() {
+
+        note.pinInBackground(ALL_NOTES, new SaveCallback() {
             @Override
             public void done(ParseException e) {
                 if(e == null) {
-                    Timber.d("Pinned note: %s", note.getTitle());
+                    Timber.d("Pinned note: %s", note.getObjectId());
                 }
                 else {
-                    Timber.e("Error pinning note: %s", note.getObjectId());
-                }
-            }
-        });
-    }
-
-
-    @Override
-    public void refreshData(final RefreshDataCallback callback) {
-        ParseQuery<Note> query = ParseQuery.getQuery(Note.class);
-        query.findInBackground(new FindCallback<Note>() {
-            public void done(final List<Note> notes, ParseException e) {
-                if (e == null) {
-                    ParseObject.unpinAllInBackground(new DeleteCallback() {
-                        @Override
-                        public void done(ParseException e) {
-                            if(e == null) {
-                                //Save all the notes
-                                ParseObject.pinAllInBackground(NOTES_PIN, notes, new SaveCallback() {
-                                    public void done(ParseException e) {
-                                        if (e == null) {
-                                            Timber.d("Found %d notes!", notes.size());
-                                            callback.onDataRefreshed();
-                                        } else {
-                                            Timber.e("Error pinning notes: %s", e.getMessage());
-                                        }
-                                    }
-                                });
-                            }
-                            else {
-                                Timber.e("Error clearing cache: %s", e.getMessage());
-                            }
-                        }
-                    });
-                } else {
-                    Timber.e("Error finding pinned notes: %s", e.getMessage());
+                    Timber.e("Could not pin '%s' %s", note.getTitle(), e.getMessage());
                 }
             }
         });
@@ -121,40 +87,78 @@ public class NotesServiceApiImpl implements NotesServiceApi {
 
     @Override
     public void uploadExistingNotes(final UploadDataCallback callback) {
-        Timber.d("Looking for notes to upload...");
-
-        ParseQuery<Note> query = new ParseQuery<Note>(Note.class);
-        query.fromPin(NOTES_PIN);
+        ParseQuery<Note> query = ParseQuery.getQuery(Note.class);
+        query.fromPin(ALL_NOTES);
         query.whereEqualTo(Note.HAS_UPLOADED, false);
         query.findInBackground(new FindCallback<Note>() {
             @Override
-            public void done(List<Note> notes, ParseException findEx) {
-                if(findEx == null) {
-                    Timber.d("Found %d notes to upload.", notes.size());
+            public void done(List<Note> notes, ParseException e) {
+                if(e == null) {
                     for (final Note note : notes) {
-                        Timber.d("Trying to upload %s", note.getTitle());
                         note.setUploaded(true);
                         note.saveInBackground(new SaveCallback() {
                             @Override
-                            public void done(ParseException saveEx) {
-                                if(saveEx == null) {
-                                    Timber.d("Uploaded %s %s", note.getTitle(), note.getObjectId());
-                                    callback.onDataUploaded();
-                                    //TODO: We should only update the row we changed, not everything...
+                            public void done(ParseException e) {
+                                if(e == null) {
+                                    Timber.d("Uploaded note: %s", note.getObjectId());
                                 }
                                 else {
                                     note.setUploaded(false);
-                                    Timber.e("Error trying to upload note:%s - %s",
-                                            note.getTitle(),
-                                            saveEx.getMessage());
+                                    Timber.e("Could not save '%s' to Parse! %s", note.getTitle(), e.getMessage());
                                 }
                             }
                         });
                     }
+                    callback.onDataUploaded();
                 }
                 else {
-                    Timber.e("Error trying to find notes to upload. %s",
-                            findEx.getMessage());
+                    Timber.e(e.getMessage());
+                }
+            }
+        });
+    }
+
+    @Override
+    public void deleteNote(final Note note) {
+        note.deleteEventually(new DeleteCallback() {
+            @Override
+            public void done(ParseException e) {
+                if(e == null) {
+                    Timber.d("Deleted %s", note.getTitle());
+                }
+                else {
+                    Timber.e(e.getMessage());
+                }
+            }
+        });
+    }
+
+    @Override
+    public void refreshData(final NotesServiceCallback<List<Note>> callback) {
+        ParseQuery<Note> query = ParseQuery.getQuery(Note.class);
+        query.findInBackground(new FindCallback<Note>() {
+            @Override
+            public void done(final List<Note> notes, ParseException e) {
+                if(e == null) {
+                    for(final Note note : notes) {
+                        note.setUploaded(true);
+                        note.pinInBackground(ALL_NOTES, new SaveCallback() {
+                            @Override
+                            public void done(ParseException e) {
+                                if(e == null) {
+                                    Timber.d("Pinned note %s - %s", note.getId(), note.getTitle());
+                                }
+                                else {
+                                    Timber.e("Could not pin note: %s - %s", note.getId(), e.getMessage());
+                                }
+                            }
+                        });
+                    }
+
+                    callback.onLoaded(notes);
+                }
+                else {
+                    Timber.e(e.getMessage());
                 }
             }
         });

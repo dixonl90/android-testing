@@ -54,5 +54,7 @@ public interface NotesContract {
         void openNoteDetails(@NonNull Note requestedNote);
 
         void uploadExisitingNotes();
+
+        void deleteNote(@NonNull Note note);
     }
 }

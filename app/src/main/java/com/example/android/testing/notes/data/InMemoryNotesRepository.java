@@ -61,6 +61,22 @@ public class InMemoryNotesRepository implements NotesRepository {
     }
 
     @Override
+    public void refreshData(@NonNull final LoadNotesCallback callback) {
+        checkNotNull(callback);
+        mNotesServiceApi.refreshData(new NotesServiceApi.NotesServiceCallback<List<Note>>() {
+            @Override
+            public void onLoaded(List<Note> notes) {
+                callback.onNotesLoaded(notes);
+            }
+
+            @Override
+            public void onError(String message) {
+                callback.onError(message);
+            }
+        });
+    }
+
+    @Override
     public void getNote(@NonNull final String noteId, @NonNull final GetNoteCallback callback) {
         checkNotNull(noteId);
         checkNotNull(callback);
@@ -79,14 +95,8 @@ public class InMemoryNotesRepository implements NotesRepository {
     }
 
     @Override
-    public void refreshData(@NonNull final RefreshDataCallback callback) {
-        checkNotNull(callback);
-        mNotesServiceApi.refreshData(new NotesServiceApi.RefreshDataCallback() {
-            @Override
-            public void onDataRefreshed() {
-                callback.onNotesRefreshed();
-            }
-        });
+    public void deleteNote(@NonNull Note note) {
+        mNotesServiceApi.deleteNote(note);
     }
 
     @Override

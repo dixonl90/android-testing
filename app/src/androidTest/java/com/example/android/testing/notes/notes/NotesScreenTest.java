@@ -111,15 +111,15 @@ public class NotesScreenTest {
         // Click on the add note button
         onView(withId(R.id.fab_add_notes)).perform(click());
 
-        // Add note title and description
+        // Add note title and createdDate
         onView(withId(R.id.add_note_title)).perform(typeText(newNoteTitle)); // Type new note title
         onView(withId(R.id.add_note_description)).perform(typeText(newNoteDescription),
-                closeSoftKeyboard()); // Type new note description and close the keyboard
+                closeSoftKeyboard()); // Type new note createdDate and close the keyboard
 
         // Save the note
         onView(withId(R.id.fab_add_notes)).perform(click());
 
-        // Scroll notes list to added note, by finding its description
+        // Scroll notes list to added note, by finding its createdDate
         onView(withId(R.id.notes_list)).perform(
                 scrollTo(hasDescendant(withText(newNoteDescription))));
 

@@ -32,12 +32,6 @@ public interface NotesServiceApi {
 
     }
 
-    interface RefreshDataCallback {
-
-        void onDataRefreshed();
-
-    }
-
     interface UploadDataCallback {
 
         void onDataUploaded();
@@ -50,7 +44,9 @@ public interface NotesServiceApi {
 
     void saveNote(Note note);
 
-    void refreshData(RefreshDataCallback callback);
+    void deleteNote(Note note);
+
+    void refreshData(NotesServiceCallback<List<Note>> callback);
 
     void uploadExistingNotes(UploadDataCallback callback);
 }

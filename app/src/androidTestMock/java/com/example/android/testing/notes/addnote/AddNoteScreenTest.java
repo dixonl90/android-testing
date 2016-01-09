@@ -105,7 +105,7 @@ public class AddNoteScreenTest {
     @Test
     public void errorShownOnEmptyMessage() {
         onView(withId(R.id.fab_add_notes)).perform(click());
-        // Add note title and description
+        // Add note title and createdDate
         onView(withId(R.id.add_note_title)).perform(typeText(""));
         onView(withId(R.id.add_note_description)).perform(typeText(""),
                 closeSoftKeyboard());
